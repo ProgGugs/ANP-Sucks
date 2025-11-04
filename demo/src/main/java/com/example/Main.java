@@ -21,6 +21,6 @@ public class Main {
         app.put("/funcionario/{id}", FuncionarioController::update);  // PUT
         app.delete("/funcionario/{id}", FuncionarioController::delete);// DELETE
 
-        System.out.println("🚀 Servidor rodando em: http://localhost:7000");
+        System.out.println("Servidor rodando em: http://localhost:7000");
     }
 }

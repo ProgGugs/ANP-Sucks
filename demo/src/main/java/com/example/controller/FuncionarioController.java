@@ -1,71 +1,58 @@
 package com.example.controller;
 
-import io.javalin.Javalin;
-import io.javalin.http.Handler;
-
+import io.javalin.http.Context;
 import com.example.Funcionario;
 import com.example.FuncionarioDAO;
-
 import java.util.List;
 
 public class FuncionarioController {
 
-    private static final FuncionarioDAO funcionarioservice = new FuncionarioDAO();
+    private static final FuncionarioDAO dao = new FuncionarioDAO();
 
-    public static void registerRoutes(Javalin app) {
-        app.get("/funcionario", listarTodos);
-        app.get("/funcionario/:id", buscarPorId);
-        app.post("/funcionario", criar);
-        app.put("/funcionario/:id", atualizar);
-        app.delete("/funcionario/:id", deletar);
+    // GET /funcionario
+    public static void getAll(Context ctx) {
+        List<Funcionario> funcionarios = dao.listarTodos();
+        ctx.json(funcionarios);
     }
 
-    // GET /api/funcionarios
-    public static Handler getAll = ctx -> {
-        List<Funcionario> funcionarios = funcionarioservice.listarTodos();
-        ctx.json(funcionarios);
-    };
-
-    // GET /api/funcionarios/:id
-    public static Handler getById = ctx -> {
+    // GET /funcionario/{id}
+    public static void getById(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        Funcionario funcionario = funcionarioservice.buscarPorId(id);
+        Funcionario funcionario = dao.buscarPorId(id);
         if (funcionario != null) {
             ctx.json(funcionario);
         } else {
-            ctx.status(404).result("Funcionario não encontrado");
+            ctx.status(404).result("Funcionário não encontrado");
         }
-    };
+    }
 
-    // POST /api/funcionarios
-    public static Handler create = ctx -> {
-        Funcionario novofuncionario = ctx.bodyAsClass(funcionario.class);
-        funcionarioservice.criar(novofuncionario);
-        ctx.status(201).json(novofuncionario);
-    };
+    // POST /funcionario
+    public static void create(Context ctx) {
+        Funcionario novo = ctx.bodyAsClass(Funcionario.class);
+        dao.criar(novo);
+        ctx.status(201).json(novo);
+    }
 
-    // PUT /api/funcionarios/:id
-    public static Handler update = ctx -> {
+    // PUT /funcionario/{id}
+    public static void update(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        Funcionario dadosAtualizados = ctx.bodyAsClass(funcionario.class);
-        boolean atualizado = funcionarioservice.atualizar(id, dadosAtualizados);
-
+        Funcionario dadosAtualizados = ctx.bodyAsClass(Funcionario.class);
+        boolean atualizado = dao.atualizar(id, dadosAtualizados);
         if (atualizado) {
-            ctx.json(dadosAtualizados);
+            ctx.status(200).result("Funcionário atualizado com sucesso");
         } else {
-            ctx.status(404).result("Funcionario não encontrado");
+            ctx.status(404).result("Funcionário não encontrado");
         }
-    };
+    }
 
-    // DELETE /api/funcionarios/:id
-    public static Handler delete = ctx -> {
+    // DELETE /funcionario/{id}
+    public static void delete(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        boolean deletado = funcionarioservice.deletar(id);
-
+        boolean deletado = dao.deletar(id);
         if (deletado) {
             ctx.status(204);
         } else {
-            ctx.status(404).result("Funcionario não encontrado");
+            ctx.status(404).result("Funcionário não encontrado");
         }
-    };
+    }
 }
