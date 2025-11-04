@@ -1,35 +1,37 @@
+package com.example;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class FuncionarioDAO {
 
-    private final List<Funcionario> pedidos = new ArrayList<>();
+    private final List<Funcionario> funcionarios = new ArrayList<>();
     private int nextId = 1;
 
     public List<Funcionario> listarTodos() {
-        return pedidos;
+        return funcionarios;
     }
 
     public Funcionario buscarPorId(int id) {
-        return pedidos.stream()
+        return funcionarios.stream()
                 .filter(p -> p.getId() == id)
                 .findFirst()
                 .orElse(null);
     }
 
-    public void criar(Funcionario pedido) {
-        pedido.setId(nextId++);
-        pedidos.add(pedido);
+    public void criar(Funcionario func) {
+        func.setId(nextId++);
+        funcionarios.add(func);
     }
 
     public boolean atualizar(int id, Funcionario dadosAtualizados) {
-        Optional<Funcionario> pedidoOpt = pedidos.stream()
+        Optional<Funcionario> funcionarioOpt = funcionarios.stream()
                 .filter(p -> p.getId() == id)
                 .findFirst();
 
-        if (pedidoOpt.isPresent()) {
-            Funcionario existente = pedidoOpt.get();
+        if (funcionarioOpt.isPresent()) {
+            Funcionario existente = funcionarioOpt.get();
             existente.setNome(dadosAtualizados.getNome());
             existente.setCargo(dadosAtualizados.getCargo());
             existente.setMatricula(dadosAtualizados.getMatricula());
@@ -39,6 +41,6 @@ public class FuncionarioDAO {
     }
 
     public boolean deletar(int id) {
-        return pedidos.removeIf(p -> p.getId() == id);
+        return funcionarios.removeIf(p -> p.getId() == id);
     }
 }

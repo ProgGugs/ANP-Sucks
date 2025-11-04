@@ -1,3 +1,5 @@
+package com.example;
+
 public class Funcionario {
     private int id;
     private String cpf;

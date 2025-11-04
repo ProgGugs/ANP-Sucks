@@ -1,3 +1,5 @@
+package com.example;
+
 public class Auxiliar extends Funcionario {
 
     public Auxiliar(int id, String cpf, String matricula, double salario, String cargo, String nome, String email,

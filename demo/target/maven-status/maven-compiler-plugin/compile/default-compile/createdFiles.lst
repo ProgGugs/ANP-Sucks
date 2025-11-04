@@ -1,0 +1,11 @@
+com\example\FuncionarioDAO.class
+com\example\Pedido.class
+com\example\ApiServer.class
+com\example\Solicitante.class
+com\example\Auxiliar.class
+com\example\Usuario.class
+com\example\Analista.class
+com\example\Diretor.class
+com\example\IUsuarioDAO.class
+com\example\Contemplado.class
+com\example\Funcionario.class

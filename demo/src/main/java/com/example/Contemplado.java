@@ -1,3 +1,5 @@
+package com.example;
+
 import java.util.Date;
 /*
  * talvez precise mudar a lógica da classe contemplado

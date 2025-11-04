@@ -1,3 +1,5 @@
+package com.example;
+
 public class Solicitante extends Usuario {
     private Pedido pedido;
 
