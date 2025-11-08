@@ -10,6 +10,8 @@ public class Funcionario {
     private String email;
     private String senha;
     private String endereco;
+
+    public Funcionario() {}
     
     public Funcionario(int id, String cpf, String matricula, double salario, String cargo, String nome, String email,
             String senha, String endereco) {

@@ -3,20 +3,26 @@ package com.example.controller;
 import io.javalin.http.Context;
 import com.example.Funcionario;
 import com.example.FuncionarioDAO;
+
 import java.util.List;
 
 public class FuncionarioController {
 
-    private static final FuncionarioDAO dao = new FuncionarioDAO();
+    private final FuncionarioDAO dao;
+
+    // O DAO precisa das credenciais do Supabase (passadas pela Main)
+    public FuncionarioController(String supabaseUrl, String supabaseKey) {
+        this.dao = new FuncionarioDAO(supabaseUrl, supabaseKey);
+    }
 
     // GET /funcionario
-    public static void getAll(Context ctx) {
+    public void getAll(Context ctx) {
         List<Funcionario> funcionarios = dao.listarTodos();
         ctx.json(funcionarios);
     }
 
     // GET /funcionario/{id}
-    public static void getById(Context ctx) {
+    public void getById(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Funcionario funcionario = dao.buscarPorId(id);
         if (funcionario != null) {
@@ -27,14 +33,18 @@ public class FuncionarioController {
     }
 
     // POST /funcionario
-    public static void create(Context ctx) {
+    public void create(Context ctx) {
         Funcionario novo = ctx.bodyAsClass(Funcionario.class);
-        dao.criar(novo);
-        ctx.status(201).json(novo);
+        boolean criado = dao.criar(novo);
+        if (criado) {
+            ctx.status(201).json(novo);
+        } else {
+            ctx.status(500).result("Erro ao criar funcionário no Supabase");
+        }
     }
 
     // PUT /funcionario/{id}
-    public static void update(Context ctx) {
+    public void update(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Funcionario dadosAtualizados = ctx.bodyAsClass(Funcionario.class);
         boolean atualizado = dao.atualizar(id, dadosAtualizados);
@@ -46,7 +56,7 @@ public class FuncionarioController {
     }
 
     // DELETE /funcionario/{id}
-    public static void delete(Context ctx) {
+    public void delete(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         boolean deletado = dao.deletar(id);
         if (deletado) {

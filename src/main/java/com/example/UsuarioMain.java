@@ -19,6 +19,8 @@ public class UsuarioMain {
             System.out.println("\nMENU PRINCIPAL");
             System.out.println("(1) Cadastrar novo usuário");
             System.out.println("(2) Fazer login");
+
+
             System.out.println("(0) Sair");
             System.out.print("Escolha uma opção: ");
             opcao = Integer.parseInt(sc.nextLine());
