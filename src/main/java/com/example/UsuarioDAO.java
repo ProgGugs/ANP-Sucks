@@ -1,117 +1,141 @@
 package com.example;
 
-import java.sql.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-/*
- * mudar os comandos sql
- * de acordo com a construção do banco
- * (estava sem acesso ao banco)
- */
-public class UsuarioDAO implements IUsuarioDAO {
 
-    private Connection connection;
+/** DAO HTTP → Supabase para a tabela "Usuario". */
+public class UsuarioDAO {
 
-    public UsuarioDAO(Connection connection) {
-        this.connection = connection;
+    private final String supabaseUrl; // .../rest/v1/Usuario
+    private final String supabaseKey;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
+
+    public UsuarioDAO(String supabaseBaseUrl, String supabaseKey) {
+        this.supabaseUrl = supabaseBaseUrl.endsWith("/") ? supabaseBaseUrl + "Usuario" : supabaseBaseUrl + "/Usuario";
+        this.supabaseKey = supabaseKey;
+        this.httpClient = HttpClient.newHttpClient();
+        this.objectMapper = new ObjectMapper();
     }
 
-    @Override
-    public boolean create(Usuario usuario) {
-        String sql = "INSERT INTO Usuario (cpfCnpj, nome, email, endereco, senha, flagReitor) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pst = connection.prepareStatement(sql)) {
-            pst.setString(1, usuario.getCpf());
-            pst.setString(2, usuario.getNome());
-            pst.setString(3, usuario.getEmail());
-            pst.setString(4, usuario.getEndereco());
-            pst.setString(5, usuario.getSenha());
-            pst.setBoolean(6, usuario.isFlagReitor());
-            return pst.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Erro ao inserir usuário: " + e.getMessage());
-            return false;
-        }
+    /** Resultado HTTP bruto para debug/propagação ao controller. */
+    public static class HttpResult {
+        public final int status;
+        public final String body;
+        public HttpResult(int status, String body) { this.status = status; this.body = body; }
+        public boolean ok() { return status >= 200 && status < 300; }
     }
 
-    @Override
-    public boolean update(Usuario usuario) {
-        String sql = "UPDATE Usuario SET cpfCnpj=?, nome=?, email=?, endereco=?, senha=?, flagReitor=? WHERE id=?";
-        try (PreparedStatement pst = connection.prepareStatement(sql)) {
-            pst.setString(1, usuario.getCpf());
-            pst.setString(2, usuario.getNome());
-            pst.setString(3, usuario.getEmail());
-            pst.setString(4, usuario.getEndereco());
-            pst.setString(5, usuario.getSenha());
-            pst.setBoolean(6, usuario.isFlagReitor());
-            pst.setInt(7, usuario.getId());
-            return pst.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Erro ao atualizar usuário: " + e.getMessage());
-            return false;
-        }
-    }
+    public List<UsuarioRecord> listarTodos() {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .GET().build();
 
-    @Override
-    public boolean delete(int id) {
-        String sql = "DELETE FROM Usuario WHERE id=?";
-        try (PreparedStatement pst = connection.prepareStatement(sql)) {
-            pst.setInt(1, id);
-            return pst.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Erro ao excluir usuário: " + e.getMessage());
-            return false;
-        }
-    }
-
-    @Override
-    public Usuario select(int id) {
-        String sql = "SELECT * FROM Usuario WHERE id=?";
-        try (PreparedStatement pst = connection.prepareStatement(sql)) {
-            pst.setInt(1, id);
-            try (ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    return new Usuario(
-                        rs.getInt("id"),
-                        rs.getString("nome"),
-                        rs.getString("cpfCnpj"),
-                        rs.getString("email"),
-                        rs.getString("endereco"),
-                        rs.getString("senha"),
-                        rs.getBoolean("flagReitor")
-                    );
-                }
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200) {
+                return objectMapper.readValue(res.body(), new TypeReference<List<UsuarioRecord>>() {});
+            } else {
+                System.err.println("[UsuarioDAO.listarTodos] status=" + res.statusCode() + " body=" + res.body());
             }
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar usuário: " + e.getMessage());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
-        return null; 
+        return new ArrayList<>();
     }
 
-    @Override
-public List<Usuario> selectAll() {
-    String sql = "SELECT * FROM Usuario";
-    List<Usuario> usuarios = new ArrayList<>();
+    public UsuarioRecord buscarPorId(long id) {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?id=eq." + id))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .GET().build();
 
-    try (PreparedStatement pst = connection.prepareStatement(sql);
-         ResultSet rs = pst.executeQuery()) {
-
-        while (rs.next()) {
-            usuarios.add(new Usuario(
-                rs.getInt("id"),
-                rs.getString("nome"),
-                rs.getString("cpfCnpj"),
-                rs.getString("email"),
-                rs.getString("endereco"),
-                rs.getString("senha"),
-                rs.getBoolean("flagReitor")
-            ));
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200 && res.body() != null && !res.body().equals("[]")) {
+                List<UsuarioRecord> list = objectMapper.readValue(res.body(), new TypeReference<List<UsuarioRecord>>() {});
+                return list.isEmpty() ? null : list.get(0);
+            } else {
+                System.err.println("[UsuarioDAO.buscarPorId] status=" + res.statusCode() + " body=" + res.body());
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
-
-    } catch (SQLException e) {
-        System.err.println("Erro ao listar usuários: " + e.getMessage());
+        return null;
     }
 
-    return usuarios;
-}
+    public HttpResult criarRaw(UsuarioRecord u) {
+        try {
+            String json = objectMapper.writeValueAsString(u);
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey,
+                             "Content-Type", "application/json", "Prefer", "return=representation")
+                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                    .build();
 
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            System.out.println("[UsuarioDAO.criar] status=" + res.statusCode() + " body=" + res.body());
+            return new HttpResult(res.statusCode(), res.body());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new HttpResult(500, "Erro cliente HTTP: " + e.getMessage());
+        }
+    }
+
+    public boolean criar(UsuarioRecord u) {
+        return criarRaw(u).ok();
+    }
+
+    public boolean atualizar(long id, UsuarioRecord u) {
+        try {
+            String json = objectMapper.writeValueAsString(u);
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?id=eq." + id))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey,
+                             "Content-Type", "application/json")
+                    .method("PATCH", HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() != 200 && res.statusCode() != 204) {
+                System.err.println("[UsuarioDAO.atualizar] status=" + res.statusCode() + " body=" + res.body());
+            }
+            return res.statusCode() == 200 || res.statusCode() == 204;
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deletar(long id) {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?id=eq." + id))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .DELETE().build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() != 200 && res.statusCode() != 204) {
+                System.err.println("[UsuarioDAO.deletar] status=" + res.statusCode() + " body=" + res.body());
+            }
+            return res.statusCode() == 200 || res.statusCode() == 204;
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

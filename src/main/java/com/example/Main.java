@@ -1,37 +1,57 @@
 package com.example;
 
 import io.javalin.Javalin;
+import io.javalin.http.staticfiles.Location;
+
 import com.example.controller.FuncionarioController;
+import com.example.controller.PedidoController;
+import com.example.controller.UsuarioController;
 
 public class Main {
 
     public static void main(String[] args) {
-        // Ler variáveis de ambiente do Supabase
-        String supabaseUrl = System.getenv("SUPABASE_URL");
-        String supabaseKey = System.getenv("SUPABASE_KEY");
+
+        // Lê as credenciais do Supabase do ambiente, igual Funcionario já usa
+        String supabaseUrl = System.getenv("SUPABASE_URL"); // ex: https://<ref>.supabase.co/rest/v1
+        String supabaseKey = System.getenv("SUPABASE_KEY"); // anon key
 
         if (supabaseUrl == null || supabaseKey == null) {
-            System.err.println("Erro: SUPABASE_URL e SUPABASE_KEY não foram definidas como variáveis de ambiente.");
+            System.err.println("Defina SUPABASE_URL e SUPABASE_KEY nas variáveis de ambiente.");
             System.exit(1);
         }
 
-        // Cria o servidor Javalin configurado para HTTPS (se certificado disponível)
-        Javalin app = Javalin.create(config -> {
-            config.http.defaultContentType = "application/json";
-            config.showJavalinBanner = false;
+        // Cria app Javalin (ajuste para HTTPS se o seu projeto já usa)
+        Javalin app = Javalin.create(cfg -> {
+            cfg.showJavalinBanner = false;
+            cfg.http.defaultContentType = "application/json";
+        }).start(7000);
 
-        }).start(7000); // ✅ Porta local (https://localhost:7000)
-
-        // Instancia o controller, passando as credenciais do Supabase
+        // Controllers existentes
         FuncionarioController funcionarioController = new FuncionarioController(supabaseUrl, supabaseKey);
 
-        // Define as rotas HTTPS (REST API)
-        app.get("/Funcionario", funcionarioController::getAll);         // GET - lista todos
-        app.get("/Funcionario/{id}", funcionarioController::getById);   // GET - por ID
-        app.post("/Funcionario", funcionarioController::create);        // POST - cria
-        app.put("/Funcionario/{id}", funcionarioController::update);    // PUT - atualiza
-        app.delete("/Funcionario/{id}", funcionarioController::delete); // DELETE - remove
+        PedidoController pedidoController = new PedidoController(supabaseUrl, supabaseKey);
 
-        System.out.println("Servidor HTTPS rodando em: https://localhost:7000");
+        UsuarioController usuarioController = new UsuarioController(supabaseUrl, supabaseKey);
+
+        // ROTAS
+        app.get("/Funcionario", funcionarioController::getAll);
+        app.get("/Funcionario/{id}", funcionarioController::getById);
+        app.post("/Funcionario", funcionarioController::create);
+        app.put("/Funcionario/{id}", funcionarioController::update);
+        app.delete("/Funcionario/{id}", funcionarioController::delete);
+
+        app.get("/Pedido", pedidoController::getAll);
+        app.get("/Pedido/{numero}", pedidoController::getByNumero);
+        app.post("/Pedido", pedidoController::create);
+        app.put("/Pedido/{numero}", pedidoController::update);
+        app.delete("/Pedido/{numero}", pedidoController::delete);
+
+        app.get("/Usuario", usuarioController::getAll);
+        app.get("/Usuario/{id}", usuarioController::getById);
+        app.post("/Usuario", usuarioController::create);
+        app.put("/Usuario/{id}", usuarioController::update);
+        app.delete("/Usuario/{id}", usuarioController::delete);
+
+        System.out.println("Servidor rodando em http://localhost:7000");
     }
 }
