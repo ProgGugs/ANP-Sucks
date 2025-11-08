@@ -24,6 +24,15 @@ public class Funcionario {
         this.endereco = endereco;
     }
 
+    public Funcionario(int id, String matricula, String cargo, String nome, String email, String senha) {
+        this.id = id;
+        this.matricula = matricula;
+        this.cargo = cargo;
+        this.nome = nome;
+        this.email = email;
+        this.senha = senha;
+    }
+
     public int getId() {
         return id;
     }
