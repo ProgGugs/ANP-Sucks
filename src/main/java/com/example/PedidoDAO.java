@@ -34,9 +34,20 @@ public class PedidoDAO {
     public static class HttpResult {
         public final int status;
         public final String body;
-        public HttpResult(int status, String body) { this.status = status; this.body = body; }
-        public boolean ok() { return status >= 200 && status < 300; }
-        @Override public String toString() { return "HttpResult{status=" + status + ", body=" + body + '}'; }
+
+        public HttpResult(int status, String body) {
+            this.status = status;
+            this.body = body;
+        }
+
+        public boolean ok() {
+            return status >= 200 && status < 300;
+        }
+
+        @Override
+        public String toString() {
+            return "HttpResult{status=" + status + ", body=" + body + '}';
+        }
     }
 
     public List<PedidoRecord> listarTodos() {
@@ -49,9 +60,11 @@ public class PedidoDAO {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                return objectMapper.readValue(response.body(), new TypeReference<List<PedidoRecord>>() {});
+                return objectMapper.readValue(response.body(), new TypeReference<List<PedidoRecord>>() {
+                });
             } else {
-                System.err.println("[PedidoDAO.listarTodos] status=" + response.statusCode() + " body=" + response.body());
+                // System.err.println(
+                //         "[PedidoDAO.listarTodos] status=" + response.statusCode() + " body=" + response.body());
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -69,10 +82,13 @@ public class PedidoDAO {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200 && response.body() != null && !response.body().equals("[]")) {
-                List<PedidoRecord> list = objectMapper.readValue(response.body(), new TypeReference<List<PedidoRecord>>() {});
+                List<PedidoRecord> list = objectMapper.readValue(response.body(),
+                        new TypeReference<List<PedidoRecord>>() {
+                        });
                 return list.isEmpty() ? null : list.get(0);
             } else {
-                System.err.println("[PedidoDAO.buscarPorNumero] status=" + response.statusCode() + " body=" + response.body());
+                // System.err.println("[PedidoDAO.buscarPorNumero] status=" +
+                // response.statusCode() + " body=" + response.body());
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -80,20 +96,56 @@ public class PedidoDAO {
         return null;
     }
 
-    /** Versão que retorna status+body do Supabase (para o controller repassar o erro real). */
+    public List<PedidoRecord> buscarPorSolicitante(long idSolicitante) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?solicitante=eq." + idSolicitante))
+                    .headers(
+                            "apikey", supabaseKey,
+                            "Authorization", "Bearer " + supabaseKey,
+                            "Content-Type", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 && response.body() != null) {
+                if (!response.body().equals("[]")) {
+                    return objectMapper.readValue(
+                            response.body(),
+                            new TypeReference<List<PedidoRecord>>() {
+                            });
+                }
+            } else {
+                // System.err.println("[PedidoDAO.buscarPorSolicitante] status=" +
+                // response.statusCode() + " body=" + response.body());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return Collections.emptyList(); // Não encontrou ou erro
+    }
+
+    /**
+     * Versão que retorna status+body do Supabase (para o controller repassar o erro
+     * real).
+     */
     public HttpResult criarRaw(PedidoRecord pedido) {
         try {
             String json = objectMapper.writeValueAsString(pedido);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(supabaseUrl))
                     .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey,
-                             "Content-Type", "application/json",
-                             "Prefer", "return=representation")
+                            "Content-Type", "application/json",
+                            "Prefer", "return=representation")
                     .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println("[PedidoDAO.criar] status=" + response.statusCode() + " body=" + response.body());
+            // System.out.println("[PedidoDAO.criar] status=" + response.statusCode() + "
+            // body=" + response.body());
             return new HttpResult(response.statusCode(), response.body());
 
         } catch (Exception e) {
@@ -113,13 +165,14 @@ public class PedidoDAO {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(supabaseUrl + "?numero=eq." + numero))
                     .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey,
-                             "Content-Type", "application/json")
+                            "Content-Type", "application/json")
                     .method("PATCH", HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200 && response.statusCode() != 204) {
-                System.err.println("[PedidoDAO.atualizar] status=" + response.statusCode() + " body=" + response.body());
+                // System.err
+                //         .println("[PedidoDAO.atualizar] status=" + response.statusCode() + " body=" + response.body());
             }
             return response.statusCode() == 200 || response.statusCode() == 204;
 

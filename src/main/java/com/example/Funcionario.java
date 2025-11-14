@@ -1,5 +1,8 @@
 package com.example;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Funcionario {
     private int id;
     private String cpf;
@@ -105,10 +108,6 @@ public class Funcionario {
 
     public void setEndereco(String endereco) {
         this.endereco = endereco;
-    }
-
-    public boolean login(String email, String senha) {
-        return this.email.equals(email) && this.senha.equals(senha);
     }
 
     @Override

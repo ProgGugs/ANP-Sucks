@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -46,7 +47,7 @@ public class UsuarioDAO {
             if (res.statusCode() == 200) {
                 return objectMapper.readValue(res.body(), new TypeReference<List<UsuarioRecord>>() {});
             } else {
-                System.err.println("[UsuarioDAO.listarTodos] status=" + res.statusCode() + " body=" + res.body());
+                // System.err.println("[UsuarioDAO.listarTodos] status=" + res.statusCode() + " body=" + res.body());
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -66,13 +67,75 @@ public class UsuarioDAO {
                 List<UsuarioRecord> list = objectMapper.readValue(res.body(), new TypeReference<List<UsuarioRecord>>() {});
                 return list.isEmpty() ? null : list.get(0);
             } else {
-                System.err.println("[UsuarioDAO.buscarPorId] status=" + res.statusCode() + " body=" + res.body());
+                // System.err.println("[UsuarioDAO.buscarPorId] status=" + res.statusCode() + " body=" + res.body());
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return null;
     }
+
+    public UsuarioRecord buscarPorEmail(String email) {
+        try {
+            String emailEncoded = URLEncoder.encode(email, StandardCharsets.UTF_8);
+            String url = supabaseUrl + "?email=eq." + emailEncoded;
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+
+            if (res.statusCode() == 200 && res.body() != null && !res.body().equals("[]")) {
+                List<UsuarioRecord> usuarios =
+                        objectMapper.readValue(res.body(), new TypeReference<List<UsuarioRecord>>() {});
+
+                return usuarios.isEmpty() ? null : usuarios.get(0);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public UsuarioRecord buscarPorSenha(String senha) {
+        try {
+            String senhaEncoded = URLEncoder.encode(senha, StandardCharsets.UTF_8);
+            String url = supabaseUrl + "?senha=eq." + senhaEncoded;
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .headers(
+                            "apikey", supabaseKey,
+                            "Authorization", "Bearer " + supabaseKey
+                    )
+                    .GET()
+                    .build();
+
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+
+            if (res.statusCode() == 200 && res.body() != null && !res.body().equals("[]")) {
+                List<UsuarioRecord> list = objectMapper.readValue(
+                        res.body(),
+                        new TypeReference<List<UsuarioRecord>>() {}
+                );
+                return list.isEmpty() ? null : list.get(0);
+            } else {
+                // System.err.println("[UsuarioDAO.buscarPorSenha] status=" +
+                //         res.statusCode() + " body=" + res.body());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 
     public HttpResult criarRaw(UsuarioRecord u) {
         try {
@@ -85,7 +148,7 @@ public class UsuarioDAO {
                     .build();
 
             HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
-            System.out.println("[UsuarioDAO.criar] status=" + res.statusCode() + " body=" + res.body());
+            // System.out.println("[UsuarioDAO.criar] status=" + res.statusCode() + " body=" + res.body());
             return new HttpResult(res.statusCode(), res.body());
 
         } catch (Exception e) {
@@ -110,7 +173,7 @@ public class UsuarioDAO {
 
             HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() != 200 && res.statusCode() != 204) {
-                System.err.println("[UsuarioDAO.atualizar] status=" + res.statusCode() + " body=" + res.body());
+                // System.err.println("[UsuarioDAO.atualizar] status=" + res.statusCode() + " body=" + res.body());
             }
             return res.statusCode() == 200 || res.statusCode() == 204;
 

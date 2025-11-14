@@ -1,7 +1,6 @@
 package com.example;
 
 import io.javalin.Javalin;
-import io.javalin.http.staticfiles.Location;
 
 import com.example.controller.FuncionarioController;
 import com.example.controller.PedidoController;
@@ -53,5 +52,10 @@ public class Main {
         app.delete("/Usuario/{id}", usuarioController::delete);
 
         System.out.println("Servidor rodando em http://localhost:7000");
+        System.out.println();
+
+        Menu menu = new Menu();
+        menu.loop();
+        System.exit(0);
     }
 }

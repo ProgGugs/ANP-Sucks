@@ -1,16 +1,21 @@
 package com.example;
 
 public class Solicitante extends Usuario {
-    private Pedido pedido;
+    private PedidoRecord pedido;
 
     public Solicitante(Usuario usuario) {
-        super(usuario.getId(), usuario.getNome(), usuario.getCpf(), 
+        super(usuario.getNome(), usuario.getCpf(), 
               usuario.getEmail(), usuario.getEndereco(), usuario.getSenha(), usuario.isFlagReitor());
     }
 
-    public void fazerPedido(String descricao, String universidade) {
-        this.pedido = new Pedido(descricao, universidade, this);
-        System.out.println("Pedido realizado com sucesso!");
+    public void fazerPedido(Long numero, String data, Double valor, Boolean flagUniversidade, String descricao,
+            String objetivo, String status, Long solicitante) {
+        if (this.pedido == null) {
+            this.pedido = new PedidoRecord(numero, data, valor, flagUniversidade, descricao, objetivo, status, solicitante);
+            System.out.println("Pedido realizado com sucesso!");
+            return;
+        }
+        System.out.println("Pedido não pode ser realizado...");
     }
 
     public String consultarStatus() {
@@ -24,7 +29,7 @@ public class Solicitante extends Usuario {
         return pedido != null && "Aprovado".equalsIgnoreCase(pedido.getStatus());
     }
 
-    public Pedido getPedido() {
+    public PedidoRecord getPedido() {
         return pedido;
     }
 }

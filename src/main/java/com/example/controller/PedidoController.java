@@ -9,15 +9,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Controller no mesmo padrão do FuncionarioController.
- * Rotas:
- *  GET    /Pedido
- *  GET    /Pedido/{numero}
- *  POST   /Pedido
- *  PUT    /Pedido/{numero}
- *  DELETE /Pedido/{numero}
- */
+
 public class PedidoController {
 
     private final PedidoDAO dao;

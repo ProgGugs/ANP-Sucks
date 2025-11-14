@@ -2,25 +2,20 @@ package com.example;
 
 import java.sql.Date;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Modelo 1:1 com a tabela "Usuario" do Supabase.
- * Campos (conforme seu print): id, cpf/cnpj, nome, email, endereco,
- * flagReitor, flagSolicitante, flagContemplado, noPedido, dtPedido,
- * universidade, dtContemplacao.
- *
- * Datas como String "YYYY-MM-DD" para não exigir JavaTimeModule.
- */
-public class UsuarioRecord {
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class UsuarioRecord {
     private Long id;                 // int8 (PK)
 
     @JsonProperty("cpf/cnpj")
     private String cpfCnpj;          // varchar (tem "/" no nome da coluna)
 
     private String nome;             // varchar
-    private String email;            // varchar
+    private String email;   
+    private String senha;            // varchar
     private String endereco;         // varchar
 
     private Boolean flagReitor;         // bool
@@ -35,6 +30,24 @@ public class UsuarioRecord {
     private Date dtContemplacao;   // date (YYYY-MM-DD)
 
     public UsuarioRecord() {}
+
+    public UsuarioRecord(String nome, String cpfCnpj, String email, String senha, Boolean flagSolicitante, String universidade) {
+        this.nome = nome;
+        this.cpfCnpj = cpfCnpj;
+        this.email = email;
+        this.senha = senha;
+        this.flagSolicitante = flagSolicitante;
+        this.universidade = universidade;
+    }
+
+    public UsuarioRecord(Long id, String nome, String cpfCnpj, String email, String senha, Boolean flagSolicitante) {
+        this.id = id;
+        this.nome = nome;
+        this.cpfCnpj = cpfCnpj;
+        this.email = email;
+        this.senha = senha;
+        this.flagSolicitante = flagSolicitante;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -71,4 +84,7 @@ public class UsuarioRecord {
 
     public Date getDtContemplacao() { return dtContemplacao; }
     public void setDtContemplacao(Date dtContemplacao) { this.dtContemplacao = dtContemplacao; }
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
 }

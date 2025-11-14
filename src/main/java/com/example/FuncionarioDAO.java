@@ -2,6 +2,7 @@ package com.example;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -77,6 +78,65 @@ public class FuncionarioDAO {
         }
         return null;
     }
+
+    public Funcionario buscarPorEmail(String email) {
+        try {
+            String emailEncoded = URLEncoder.encode(email, StandardCharsets.UTF_8);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?email=eq." + emailEncoded))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 && !response.body().equals("[]")) {
+                List<Funcionario> list = objectMapper.readValue(
+                        response.body(),
+                        new TypeReference<List<Funcionario>>() {}
+                );
+                return list.isEmpty() ? null : list.get(0);
+            } else {
+                System.err.println("[FuncionarioDAO.buscarPorEmail] status=" + response.statusCode() 
+                        + " body=" + response.body());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }   
+
+    public Funcionario buscarPorSenha(String senha) {
+        try {
+            String senhaEncoded = URLEncoder.encode(senha, StandardCharsets.UTF_8);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(supabaseUrl + "?senha=eq." + senhaEncoded))
+                    .headers("apikey", supabaseKey, "Authorization", "Bearer " + supabaseKey)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200 && !response.body().equals("[]")) {
+                List<Funcionario> list = objectMapper.readValue(
+                        response.body(),
+                        new TypeReference<List<Funcionario>>() {}
+                );
+                return list.isEmpty() ? null : list.get(0);
+            } else {
+                System.err.println("[FuncionarioDAO.buscarPorSenha] status=" + response.statusCode() 
+                        + " body=" + response.body());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     public boolean criar(Funcionario f) {
         try {

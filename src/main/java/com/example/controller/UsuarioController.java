@@ -9,7 +9,7 @@ import io.javalin.http.Context;
 import java.util.List;
 import java.util.Objects;
 
-/** Controller Javalin p/ /Usuario (igual padrão Funcionario/Pedido). */
+
 public class UsuarioController {
 
     private final UsuarioDAO dao;

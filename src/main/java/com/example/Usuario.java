@@ -21,6 +21,22 @@ public class Usuario {
         this.flagReitor = reitor;
     }
 
+    public Usuario(String nome, String cpfCnpj, String email, String endereco, String senha, boolean reitor) {
+        this.nome = nome;
+        this.cpfCnpj = cpfCnpj;
+        this.email = email;
+        this.endereco = endereco;
+        this.senha = senha;
+        this.flagReitor = reitor;
+    }
+
+    public Usuario(String nome, String cpfCnpj, String email, String senha) {
+        this.nome = nome;
+        this.cpfCnpj = cpfCnpj;
+        this.email = email;
+        this.senha = senha;
+    }
+
     public boolean login(String emailDigitado, String senhaDigitada) {
         return this.email.equals(emailDigitado) && this.senha.equals(senhaDigitada);
     }
